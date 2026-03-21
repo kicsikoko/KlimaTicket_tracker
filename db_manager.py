@@ -2,7 +2,7 @@ import sqlite3
 
 DB_NAME = "klimaticket.db"
 
-def int_db():
+def init_db():
     conn = sqlite3.connect(DB_NAME)
     cursor = conn.cursor()
     #Created the table for the trips
