@@ -37,8 +37,8 @@ def show_stats(message):
     response = (
         f"📊 Klimaticket Statistics:\n\n"
         f"🚊 Number of trips: {trip_count}\n"
-        f"💰 Összes megtakarítás: {total_saved:.2f} €\n"
-        f"\nÜgyes vagy, csak így tovább!"
+        f"💰 Total Savings: {total_saved:.2f} €\n"
+        
     )
 
     bot.reply_to(message, response, parse_mode='Markdown')
@@ -46,16 +46,18 @@ def show_stats(message):
 @bot.message_handler(func=lambda message: True)
 def handle_message(message):
     if message.text == 'Wien -> Linz':
-        db_manager.log_trip('Wien', 'Linz', 20.90) 
-        bot.reply_to(message, "✅ Added: Wien -> Linz (Spared: 20.90€)")
+        price = db_manager.get_price('Wien->Linz')
+        db_manager.log_trip('Wien', 'Linz', price) 
+        bot.reply_to(message, f"✅ Added: Wien -> Linz (Spared: {price}€)")
     elif message.text == 'Linz -> Wien':
-        db_manager.log_trip('Linz', 'Wien', 20.90)
-        bot.reply_to(message, "✅ Added: Wien -> Linz (Spared: 20.90€)")
+        price = db_manager.get_price('Linz->Wien')
+        db_manager.log_trip('Linz', 'Wien', price)
+        bot.reply_to(message, f"✅ Added: Wien -> Linz (Spared: {price}€)")
 
 #bot.polling()
 if __name__ == "__main__":
-    print("A bot elindult... Nyomj Ctrl+C-t a leállításhoz.")
+    print("Bot has started...")
     try:
         bot.infinity_polling(timeout=10, long_polling_timeout=5)
     except Exception as e:
-        print(f"Hiba történt: {e}")
+        print(f"Error Occured: {e}")
