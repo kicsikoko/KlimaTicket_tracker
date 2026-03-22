@@ -100,9 +100,6 @@ def show_stats(message):
 
     current_cycle_start = get_current_pass_start()
     total_res = db_manager.get_stats(current_cycle_start)
-
-    #Total data
-    #total_res = db_manager.get_stats()
     total_saved = total_res[0] if total_res and total_res[0] else 0
     total_count = total_res[1] if total_res and total_res[1] else 0
 
@@ -115,7 +112,8 @@ def show_stats(message):
     annual_percent = min(int((total_saved / klimaticket_full_price) * 100), 100)
     annual_bar = "█" * (annual_percent // 10) + "░" * (10 - (annual_percent // 10))
 
-    monthly_percent = min(int((m_saved / klimaticket_full_price) * 100), 100)
+    m_profit = max(0, m_saved - klimaticket_monthly_price)
+    monthly_percent = min(int((m_saved / klimaticket_monthly_price) * 100), 100)
     monthly_bar = "█" * (monthly_percent // 10) + "░" * (10 - (monthly_percent // 10))
 
     remaining_annual = klimaticket_full_price - total_saved
@@ -129,13 +127,13 @@ def show_stats(message):
         f"📊 Klimaticket Statistics:\n\n"
         f"━━━━━━━━━━━━━━━━━━\n"
         f"📅 *This month:*\n"
-        f"🚊 Number of trips: {m_count} | Saved already: {m_saved:.2f}€\n"
+        f"🚊 Number of trips: {m_count} | Saved already: {m_profit:.2f}€\n"
         f"[{monthly_bar}] {monthly_percent}%\n"
         f"_{'✅ Monthly goal achieved!' if m_saved >= klimaticket_monthly_price else 'Has not yet been paid off.'}_\n\n"
         f"💰 Total Annual Savings:\n"
         f"Total trips: {total_count}\n"
         f"[{annual_bar}] {annual_percent}%\n"
-        f" Savings so far: *{total_saved:.2f} €*\n"
+        f" Savings so far: *{total_saved:.2f} €* / {klimaticket_full_price} €\n"
         f"\n\n 🔄 Current pass cycle: {current_cycle_start}"
     )
 
