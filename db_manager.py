@@ -59,3 +59,17 @@ def delete_last_trip():
     cursor.execute("DELETE FROM trips WHERE id = (SELECT MAX(id) FROM trips)")
     conn.commit()
     conn.close()
+
+def get_monthly_stats():
+    conn = sqlite3.connect(DB_NAME)
+    cursor = conn.cursor()
+    #Search only those rows which year-month aligns with today's
+    query = """
+        SELECT SUM(price_saved), COUNT(id) 
+        FROM trips 
+        WHERE strftime('%Y-%m', date) = strftime('%Y-%m', 'now')
+    """
+    cursor.execute(query)
+    result = cursor.fetchone()
+    conn.close()
+    return result #(monthly_sum, monthly_count)

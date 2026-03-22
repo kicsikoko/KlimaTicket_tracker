@@ -14,7 +14,8 @@ if not TOKEN:
 
 bot = telebot.TeleBot(TOKEN)
 
-klimaticket_price = 1300
+klimaticket_full_price = 1300
+klimaticket_monthly_price = 108.33
 singleticket_price = 20.90
 
 db_manager.init_db() #Creating the DB at start
@@ -32,30 +33,38 @@ def send_welcome(message):
 
 @bot.message_handler(commands=['stats'])
 def show_stats(message):
-    result = db_manager.get_stats()
 
-    #result[0] az összeg (SUM), result[1] a darabszám (COUNT)
-    total_saved = result[0] if result[0] else 0
-    trip_count = result[1] if result[1] else 0
+    #Total data
+    total_res = db_manager.get_stats()
+    total_saved = total_res[0] if total_res and total_res[0] else 0
+    total_count = total_res[1] if total_res and total_res[1] else 0
 
-    remaining_amount = klimaticket_price - total_saved
+    #Monthly data
+    monthly_res = db_manager.get_monthly_stats()
+    m_saved = monthly_res[0] if monthly_res and monthly_res[0] else 0
+    m_count = monthly_res[1] if monthly_res and monthly_res[1] else 0
 
-    if remaining_amount > 0:
-        trips_needed = int(remaining_amount / singleticket_price) + 1
-        progress_msg = f"📉 **{remaining_amount:.2f} €** more needed for payback.\n" \
-                       f"🚉 **{trips_needed}** trips."
+    #Progress bar
+    percent = min(int((m_saved / klimaticket_full_price) * 100), 100)
+    bar = "█" * (percent // 10) + "░" * (10 - (percent // 10))
+
+    remaining_annual = klimaticket_full_price - total_saved
+    if remaining_annual > 0:
+        trips_left = int(remaining_annual / singleticket_price) + 1
+        annual_status = f"📉 **{remaining_annual:.2f} €** is needed and ({trips_left} is left)."
     else:
-        #if you spare more than the pass price
-        profit = abs(remaining_amount)
-        progress_msg = f"🥳 **Your pass has already paid off!**\n" \
-                       f"💰 Currently **{profit:.2f} €** is the pure profit."
+        annual_status = f"🥳 **A bérlet visszahozta az árát!** (+{abs(remaining_annual):.2f} €)"
 
     response = (
         f"📊 Klimaticket Statistics:\n\n"
-        f"🚊 Number of trips: {trip_count}\n"
-        f"💰 Total Savings: *{total_saved:.2f} €*\n\n"
-        f"{progress_msg}"
-        
+        f"━━━━━━━━━━━━━━━━━━\n"
+        f"📅 *This month:*\n"
+        f"🚊 Number of trips: {m_count} | Saved already: {m_saved:.2f}€\n"
+        f"[{bar}] {percent}%\n"
+        f"_{'✅ Monthly goal achieved!' if m_saved >= klimaticket_monthly_price else 'Has not yet been paid off.'}_\n\n"
+        f"💰 Total Annual Savings:"
+        f"Total trips: {total_count}\n"
+        f" Savings so far: *{total_saved:.2f} €*\n"
     )
 
     bot.reply_to(message, response, parse_mode='Markdown')
