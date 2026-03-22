@@ -70,6 +70,11 @@ def export_to_csv(message):
     
     file_name = "klimaticket_export.csv"
 
+    with open(file_name, mode='w', newline='', encoding='utf-8') as file:
+        writer = csv.writer(file)
+        writer.writerow(['Date', 'Origin', 'Destination', 'Price Saved (€)'])
+        writer.writerows(trips)
+
     with open (file_name, 'rb') as doc:
         bot.send_document(message.chat.id, doc, caption="📊 Here is your total trip log in csv format!")
 
