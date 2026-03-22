@@ -20,6 +20,32 @@ singleticket_price = 20.90
 
 db_manager.init_db() #Creating the DB at start
 
+# 1. Ask 'From where'
+def ask_from(message):
+    msg = bot.send_message(message.chat.id, "📍 Departure?")
+    bot.register_next_step_handler(msg, ask_to)
+
+# 2. Ask 'To where'
+def ask_to(message):
+    origin = message.text
+    msg = bot.send_message(message.chat.id, f"🏁 All right, {origin} -> arrival?")
+    bot.register_next_step_handler(msg, ask_price, origin)
+
+# 3. Ask about price
+def ask_price(message, origin):
+    destination = message.text
+    msg = bot.send_message(message.chat.id, f"💰 How much would it be {origin} between {destination}?")
+    bot.register_next_step_handler(msg, save_other_trip, origin, destination)
+
+# 4. Save to database
+def save_other_trip(message, origin, destination):
+    try:
+        price = float(message.text.replace(',', '.')) #Handle comma and dot
+        db_manager.log_trip(origin, destination, price)
+        bot.send_message(message.chat.id, f"✅ Sucessfully added: {origin} -> {destination} ({price} €)")
+    except ValueError:
+        bot.send_message(message.chat.id, "❌ Error! Please only number for price value. Retry 'Other' button!")
+
 @bot.message_handler(commands=['start'])
 def send_welcome(message):
     #Creating Buttons
@@ -112,29 +138,3 @@ if __name__ == "__main__":
         bot.infinity_polling(timeout=10, long_polling_timeout=5)
     except Exception as e:
         print(f"Error Occured: {e}")
-
-# 1. Ask 'From where'
-def ask_from(message):
-    msg = bot.send_message(message.chat.id, "📍 Departure?")
-    bot.register_next_step_handler(msg, ask_to)
-
-# 2. Ask 'To where'
-def ask_to(message):
-    origin = message.text
-    msg = bot.send_message(message.chat.id, f"🏁 All right, {origin} -> arrival?")
-    bot.register_next_step_handler(msg, ask_price, origin)
-
-# 3. Ask about price
-def ask_price(message, origin):
-    destination = message.text
-    msg = bot.send_message(message.chat.id, f"💰 How much would it be {origin} between {destination}?")
-    bot.register_next_step_handler(msg, save_other_trip, origin, destination)
-
-# 4. Save to database
-def save_other_trip(message, origin, destination):
-    try:
-        price = float(message.text.replace(',', '.')) #Handle comma and dot
-        db_manager.log_trip(origin, destination, price)
-        bot.send_message(message.chat.id, f"✅ Sucessfully added: {origin} -> {destination} ({price} €)")
-    except ValueError:
-        bot.send_message(message.chat.id, "❌ Error! Please only number for price value. Retry 'Other' button!")
