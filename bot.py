@@ -21,6 +21,8 @@ klimaticket_full_price = 1300
 klimaticket_monthly_price = 108.33
 singleticket_price = 20.90
 
+KLIMATICKET_START_DATE = "2025-10-06"
+
 db_manager.init_db() #Creating the DB at start
 
 # 1. Ask 'From where'
@@ -84,6 +86,8 @@ def export_to_csv(message):
 
 @bot.message_handler(commands=['stats'])
 def show_stats(message):
+
+    total_res = db_manager.get_stats(KLIMATICKET_START_DATE)
 
     #Total data
     total_res = db_manager.get_stats()

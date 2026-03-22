@@ -44,11 +44,12 @@ def log_trip(origin, destination, price):
     conn.commit()
     conn.close()
 
-def get_stats():
+def get_stats(start_date):
     conn = sqlite3.connect(DB_NAME)
-    cursor =    conn.cursor()
-    cursor.execute("SELECT SUM(price_saved), COUNT(id) FROM trips")
-    result = cursor.fetchone() #retrieve the result
+    cursor = conn.cursor()
+    query = ("SELECT SUM(price_saved), COUNT(id) FROM trips WHERE date >= ?")
+    cursor.execute(query, (start_date,))
+    result = cursor.fetchone()
     conn.close()
     return result
 
