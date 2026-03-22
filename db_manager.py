@@ -15,6 +15,7 @@ def init_db():
                    price_saved REAL)''')
     conn.commit()
     conn.close()
+
 def log_trip(origin, destination, price):
     conn = sqlite3.connect(DB_NAME)
     cursor = conn.cursor()
@@ -24,3 +25,11 @@ def log_trip(origin, destination, price):
     )
     conn.commit()
     conn.close()
+
+def get_stats():
+    conn = sqlite3.connect(DB_NAME)
+    cursor =    conn.cursor()
+    cursor.execute("SELECT SUM(price_saved), COUNT(id) FROM trips")
+    result = cursor.fetchone() #retrieve the result
+    conn.close()
+    return result

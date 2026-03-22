@@ -26,6 +26,23 @@ def send_welcome(message):
 
     bot.reply_to(message, "Which route should be registered?", reply_markup=markup)
 
+@bot.message_handler(commands=['stats'])
+def show_stats(message):
+    result = db_manager.get_stats()
+
+    #result[0] az összeg (SUM), result[1] a darabszám (COUNT)
+    total_saved = result[0] if result[0] else 0
+    trip_count = result[1] if result[1] else 0
+
+    response = (
+        f"📊 Klimaticket Statistics:\n\n"
+        f"🚊 Number of trips: {trip_count}\n"
+        f"💰 Összes megtakarítás: {total_saved:.2f} €\n"
+        f"\nÜgyes vagy, csak így tovább!"
+    )
+
+    bot.reply_to(message, response, parse_mode='Markdown')
+
 @bot.message_handler(func=lambda message: True)
 def handle_message(message):
     if message.text == 'Wien -> Linz':
