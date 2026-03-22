@@ -82,7 +82,7 @@ def show_history(message):
 
     for trip in trips:
         #trip[0] = dátum, trip[1] = honnan, trip[2] = hova, trip[3] = ár
-        date_only = trip[0].split[0]
+        date_only = trip[0].split()[0]
         history_text += f"📅 {date_only} | {trip[1]} ➡️ {trip[2]} | *{trip[3]:.2f}€*\n"
     
     bot.reply_to(message, history_text, parse_mode='Markdown')
