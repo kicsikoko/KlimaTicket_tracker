@@ -54,7 +54,7 @@ def handle_message(message):
         price = db_manager.get_price('Linz->Wien')
         db_manager.log_trip('Linz', 'Wien', price)
         bot.reply_to(message, f"✅ Added: Wien -> Linz (Spared: {price}€)")
-    elif message.text == '🔙 Undone':
+    elif message.text == '🔙 Undo last trip':
         db_manager.delete_last_trip()
         bot.reply_to(message, "🗑️ Last one deleted!")
 
