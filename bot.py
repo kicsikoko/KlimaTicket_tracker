@@ -24,6 +24,20 @@ klimaticket_full_price = 1300
 klimaticket_monthly_price = 108.33
 singleticket_price = 20.90
 
+def get_current_pass_start():
+    today = datetime.now()
+    #Pass last day is Oktober 6
+    #If it's already passed 6th of Oct then this year 6th of October is the start
+    #if not still last year's 6th of Oct
+    if today.month > 10 or (today.month == 10 and today.day >= 6):
+        start_year = today.year
+    else:
+        start_year = today.year -1
+
+    return f"{start_year}-10-06"
+
+KLIMATICKET_START_DATE = get_current_pass_start()
+
 db_manager.init_db() #Creating the DB at start
 
 # 1. Ask 'From where'
@@ -59,9 +73,12 @@ def send_welcome(message):
     itembtn1 = types.KeyboardButton('Wien -> Linz')
     itembtn2 = types.KeyboardButton('Linz -> Wien')
     itembtn3 = types.KeyboardButton('🔙 Undo last trip')
-    itembtn4 = types.KeyboardButton('📜 History')
-    itembnt5 = types.KeyboardButton('➕ Other (Custom)')
-    markup.add(itembtn1, itembtn2, itembtn3, itembtn4, itembnt5)
+    itembtn4 = types.KeyboardButton('➕ Other (Custom)')
+    itembtn5 = types.KeyboardButton('📜 History')
+    itembtn6 = types.KeyboardButton('📊 Stats')
+    itembtn7 = types.KeyboardButton('📈 Trend')
+    itembtn8 = types.KeyboardButton('🍕 Pie Chart')
+    markup.add(itembtn1, itembtn2, itembtn3, itembtn4, itembtn5, itembtn6, itembtn7, itembtn8)
 
     bot.reply_to(message, "Which route should be registered?", reply_markup=markup)
 
@@ -84,18 +101,6 @@ def export_to_csv(message):
         bot.send_document(message.chat.id, doc, caption="📊 Here is your total trip log in csv format!")
 
     os.remove(file_name) #Cleaning
-
-def get_current_pass_start():
-    today = datetime.now()
-    #Pass last day is Oktober 6
-    #If it's already passed 6th of Oct then this year 6th of October is the start
-    #if not still last year's 6th of Oct
-    if today.month > 10 or (today.month == 10 and today.day >= 6):
-        start_year = today.year
-    else:
-        start_year = today.year -1
-
-    return f"{start_year}-10-06"
 
 @bot.message_handler(commands=['stats'])
 def show_stats(message):
@@ -160,7 +165,7 @@ def show_history(message):
 
 @bot.message_handler(commands=['chart'])
 def send_chart(message):
-    data = db_manager.get_data_for_chart()
+    data = db_manager.get_data_for_chart(KLIMATICKET_START_DATE)
     
     if not data:
         bot.reply_to(message, "📭 Not enough data to create chart.")
@@ -326,14 +331,20 @@ def handle_message(message):
     elif message.text == 'Linz -> Wien':
         price = db_manager.get_price('Linz->Wien')
         db_manager.log_trip('Linz', 'Wien', price)
-        bot.reply_to(message, f"✅ Added: Wien -> Linz (Spared: {price}€)")
+        bot.reply_to(message, f"✅ Added: Linz -> Wien (Spared: {price}€)")
     elif message.text == '🔙 Undo last trip':
         db_manager.delete_last_trip()
         bot.reply_to(message, "🗑️ Last one deleted!")
-    elif message.text == '📜 History':
-        show_history(message)
     elif message.text == '➕ Other (Custom)':
         ask_from(message)
+    elif message.text == '📜 History':
+        show_history(message)
+    elif message.text == '📊 Stats':
+        show_stats(message)
+    elif message.text == '📈 Trend':
+        send_trend_chart(message)
+    elif message.text == '🍕 Pie Chart':
+        show_distribution_chart(message)
 
 if __name__ == "__main__":
     print("Bot has started...")

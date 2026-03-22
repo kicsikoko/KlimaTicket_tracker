@@ -93,20 +93,20 @@ def get_all_trips():
     conn.close()
     return rows
 
-def get_data_for_chart():
+def get_data_for_chart(start_date): # Adjunk neki paramétert
     conn = sqlite3.connect(DB_NAME)
     cursor = conn.cursor()
-    # Csoportosítunk év és hónap szerint, hogy ne keveredjenek az évek
     query = """
         SELECT strftime('%Y-%m', date) as month, SUM(price_saved)
         FROM trips
+        WHERE date >= ? 
         GROUP BY month
         ORDER BY month ASC
     """
-    cursor.execute(query)
+    cursor.execute(query, (start_date,))
     rows = cursor.fetchall()
     conn.close()
-    return rows # Format: [('2025-11', 140.5), ('2025-12', 90.2)...]
+    return rows
 
 def get_cumulative_data():
     conn = sqlite3.connect(DB_NAME)
