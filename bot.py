@@ -4,6 +4,8 @@ import telebot
 from telebot import types
 from dotenv import load_dotenv
 import db_manager
+import matplotlib
+matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 import io
 from datetime import datetime
