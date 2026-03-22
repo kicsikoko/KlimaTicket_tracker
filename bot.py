@@ -1,4 +1,5 @@
 import os
+import csv
 import telebot
 from telebot import types
 from dotenv import load_dotenv
@@ -58,6 +59,21 @@ def send_welcome(message):
     markup.add(itembtn1, itembtn2, itembtn3, itembtn4, itembnt5)
 
     bot.reply_to(message, "Which route should be registered?", reply_markup=markup)
+
+@bot.message_handler(commands=['export'])
+def export_to_csv(message):
+    trips = db_manager.get_all_trips()
+
+    if not trips:
+        bot.reply_to(message, "📭 No data to export - database is empty.")
+        return
+    
+    file_name = "klimaticket_export.csv"
+
+    with open (file_name, 'rb') as doc:
+        bot.send_document(message.chat.id, doc, caption="📊 Here is your total trip log in csv format!")
+
+    os.remove(file_name) #Cleaning
 
 @bot.message_handler(commands=['stats'])
 def show_stats(message):

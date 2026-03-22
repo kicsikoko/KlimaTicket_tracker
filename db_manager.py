@@ -83,3 +83,11 @@ def get_recent_trips(limit=5):
     rows = cursor.fetchall()
     conn.close()
     return rows
+
+def get_all_trips():
+    conn = sqlite3.connect(DB_NAME)
+    cursor = conn.cursor()
+    cursor.execute("SELECT date, origin, destination, price_saved FROM trips ORDER BY date ASC")
+    rows = cursor.fetchall()
+    conn.close()
+    return rows
