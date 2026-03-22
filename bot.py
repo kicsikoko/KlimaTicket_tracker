@@ -27,7 +27,8 @@ def send_welcome(message):
     itembtn1 = types.KeyboardButton('Wien -> Linz')
     itembtn2 = types.KeyboardButton('Linz -> Wien')
     itembtn3 = types.KeyboardButton('🔙 Undo last trip')
-    markup.add(itembtn1, itembtn2, itembtn3)
+    itembtn4 = types.KeyboardButton('📜 History')
+    markup.add(itembtn1, itembtn2, itembtn3, itembtn4)
 
     bot.reply_to(message, "Which route should be registered?", reply_markup=markup)
 
@@ -69,6 +70,23 @@ def show_stats(message):
 
     bot.reply_to(message, response, parse_mode='Markdown')
 
+@bot.message_handler(commands=['history'])
+def show_history(message):
+    trips = db_manager.get_recent_trips(5)
+
+    if not trips:
+        bot.reply_to(message, "📭 Még nincsenek rögzített utazásaid.")
+        return
+    
+    history_text = "📜 *Legutóbbi 5 utazásod:*\n\n"
+
+    for trip in trips:
+        #trip[0] = dátum, trip[1] = honnan, trip[2] = hova, trip[3] = ár
+        date_only = trip[0].split[0]
+        history_text += f"📅 {date_only} | {trip[1]} ➡️ {trip[2]} | *{trip[3]:.2f}€*\n"
+    
+    bot.reply_to(message, history_text, parse_mode='Markdown')
+
 @bot.message_handler(func=lambda message: True)
 def handle_message(message):
     if message.text == 'Wien -> Linz':
@@ -82,6 +100,8 @@ def handle_message(message):
     elif message.text == '🔙 Undo last trip':
         db_manager.delete_last_trip()
         bot.reply_to(message, "🗑️ Last one deleted!")
+    elif message.text == '📜 History':
+        show_history(message)
 
 #bot.polling()
 if __name__ == "__main__":

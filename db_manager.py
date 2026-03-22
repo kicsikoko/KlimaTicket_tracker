@@ -73,3 +73,13 @@ def get_monthly_stats():
     result = cursor.fetchone()
     conn.close()
     return result #(monthly_sum, monthly_count)
+
+def get_recent_trips(limit=5):
+    conn = sqlite3.connect(DB_NAME)
+    cursor = conn.cursor()
+    #Request the most recent X trips in chronological order (newest at the top)
+    query = "SELECT date, origin, destination, price_saved FROM trips ORDER BY id DESC LIMIT ?"
+    cursor.execute(query, (limit,))
+    rows = cursor.fetchall()
+    conn.close()
+    return rows
