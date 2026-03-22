@@ -91,3 +91,18 @@ def get_all_trips():
     rows = cursor.fetchall()
     conn.close()
     return rows
+
+def get_data_for_chart():
+    conn = sqlite3.connect(DB_NAME)
+    cursor = conn.cursor()
+    # Csoportosítunk év és hónap szerint, hogy ne keveredjenek az évek
+    query = """
+        SELECT strftime('%Y-%m', date) as month, SUM(price_saved)
+        FROM trips
+        GROUP BY month
+        ORDER BY month ASC
+    """
+    cursor.execute(query)
+    rows = cursor.fetchall()
+    conn.close()
+    return rows # Formátum: [('2025-11', 140.5), ('2025-12', 90.2)...]

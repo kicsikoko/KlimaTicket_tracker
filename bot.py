@@ -4,6 +4,8 @@ import telebot
 from telebot import types
 from dotenv import load_dotenv
 import db_manager
+import matplotlib.pyplot as plt
+import io
 
 #Load env variables and read the token
 load_dotenv()
@@ -134,6 +136,45 @@ def show_history(message):
         history_text += f"📅 {date_only} | {trip[1]} ➡️ {trip[2]} | *{trip[3]:.2f}€*\n"
     
     bot.reply_to(message, history_text, parse_mode='Markdown')
+
+@bot.message_handler(commands=['chart'])
+def send_chart(message):
+    data = db_manager.get_data_for_chart()
+    
+    if not data:
+        bot.reply_to(message, "📭 Nincs elég adat a grafikonhoz.")
+        return
+
+    months = [row[0] for row in data]
+    savings = [row[1] for row in data]
+
+    # --- Matplotlib varázslat ---
+    plt.figure(figsize=(10, 6))
+    bars = plt.bar(months, savings, color='skyblue', edgecolor='navy')
+    
+    # Havi bérlet ára (vízszintes vonal)
+    plt.axhline(y=108.33, color='red', linestyle='--', label='Monthly Cost (108.33 €)')
+    
+    # Design finomhangolás
+    plt.title('Monthly Klimaticket Savings', fontsize=16)
+    plt.xlabel('Month', fontsize=12)
+    plt.ylabel('Euro (€)', fontsize=12)
+    plt.xticks(rotation=45)
+    plt.legend()
+    plt.grid(axis='y', linestyle=':', alpha=0.7)
+
+    # Értékek kiírása az oszlopok tetejére
+    for bar in bars:
+        yval = bar.get_height()
+        plt.text(bar.get_x() + bar.get_width()/2, yval + 2, f'{yval:.0f}€', ha='center', va='bottom')
+
+    # Kép mentése memóriába (fájl helyett)
+    buf = io.BytesIO()
+    plt.savefig(buf, format='png', bbox_inches='tight')
+    buf.seek(0)
+    plt.close() # Fontos, hogy ne fogyassza a RAM-ot!
+
+    bot.send_photo(message.chat.id, buf, caption="📊 Itt a havi lebontásod. A piros vonal felett már tiszta haszon vagy!")
 
 @bot.message_handler(func=lambda message: True)
 def handle_message(message):
