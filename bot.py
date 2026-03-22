@@ -126,7 +126,7 @@ def show_stats(message):
     response = (
         f"📊 Klimaticket Statistics:\n"
         f"━━━━━━━━━━━━━━━━━━\n"
-        f"📅 *This month:*\n"
+        f"📅 *This month:*\n\n"
         f"🚊 Number of trips: {m_count} | Saved already: {m_profit:.2f}€\n"
         f"[{monthly_bar}] {monthly_percent}%\n"
         f"_{'✅ Monthly goal achieved!' if m_saved >= klimaticket_monthly_price else 'Has not yet been paid off.'}_\n\n"
@@ -194,6 +194,47 @@ def send_chart(message):
     plt.close() # Fontos, hogy ne fogyassza a RAM-ot!
 
     bot.send_photo(message.chat.id, buf, caption="📊 Here is your monthly breakdown. Above the red line is pure profit!")
+
+@bot.message_handler(commands=['predict'])
+def predict_savings(message):
+    #Basic data and date
+    start_date = datetime.strptime(get_current_pass_start(), "%Y-%m-%d")
+    today = datetime.now()
+    end_date = datetime(today.year if today.month < 10 or (today.month == 10 and today.day < 6)
+                         else today.year + 1, 10, 6)
+    
+    #Stats fetch
+    total_res = db_manager.get_stats(get_current_pass_start())
+    total_saved = total_res[0] if total_res and total_res[0] else 0
+
+    #Calculating durations
+    days_passed = (today - start_date).days
+    if days_passed <= 0: days_passed = 1 #Division by zero protection
+
+    days_remaining = (end_date - today).days
+
+    #Math (Linear regression basics)
+    daily_avg = total_saved / days_passed
+    predicted_future_saving = daily_avg * days_remaining
+    final_prediction = total_saved + predicted_future_saving
+
+    #Pure profit
+    expected_profit = final_prediction - klimaticket_full_price
+
+    response = (
+        f"🔮 *KLIMATICKET Prediction*\n"
+        f"━━━━━━━━━━━━━━━━━━\n"
+        f"📅 *Your pace:*\n"
+        f"Days passed: {days_passed}\n"
+        f"Daily AVG saving: *{daily_avg:.2f} €*\n\n"
+        f"🚀 *Expected result (2026. okt. 06):*\n"
+        f"Estimated annual savings: *{final_prediction:.2f} €*\n"
+        f"Expected net profit: *{expected_profit:.2f} €*\n\n"
+        f"_{'📈 You are on the right track, it will pay off handsomely!' if expected_profit > 0 else '📉 At the current pace, the rental will not fully pay for itself.'}_"
+    )
+
+    bot.reply_to(message, response, parse_mode='Markdown')
+
 
 @bot.message_handler(func=lambda message: True)
 def handle_message(message):
