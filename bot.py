@@ -228,12 +228,54 @@ def predict_savings(message):
         f"Days passed: {days_passed}\n"
         f"Daily AVG saving: *{daily_avg:.2f} €*\n\n"
         f"🚀 *Expected result (2026. okt. 06):*\n"
-        f"Estimated annual savings: *{final_prediction:.2f} €*\n"
+        f"Estimated annual cost: *{final_prediction:.2f} €*\n"
         f"Expected net profit: *{expected_profit:.2f} €*\n\n"
         f"_{'📈 You are on the right track, it will pay off handsomely!' if expected_profit > 0 else '📉 At the current pace, the rental will not fully pay for itself.'}_"
     )
 
     bot.reply_to(message, response, parse_mode='Markdown')
+
+@bot.message_handler(commands=['trend'])
+def send_trend_chart(message):
+    data = db_manager.get_cumulative_data()
+    if not data: return
+
+    months = [row[0] for row in data]
+    cumulative_savings = [row[1] for row in data]
+    
+    # 1. Base chart
+    plt.figure(figsize=(10, 6))
+    plt.plot(months, cumulative_savings, marker='o', label='Actual Value', linewidth=3)
+    
+    # 2. Break-even point (1300€)
+    plt.axhline(y=1300, color='red', linestyle='-', label='Ticket Cost (1300€)')
+
+    # 3. FORECAST (Linear extrapolation)
+    # Calculate the average slope for the last month
+    last_val = cumulative_savings[-1]
+    # Assume there are still 6 months left (for simplicity’s sake)
+    future_months = ["2026-04", "2026-05", "2026-06", "2026-07", "2026-08", "2026-09"]
+    
+    # Monthly average calculated from your daily average (e.g., €146)
+    avg_monthly_gain = last_val / len(months) 
+    
+    projection = [last_val + (avg_monthly_gain * i) for i in range(1, len(future_months) + 1)]
+    
+    # Drawing Dotted line
+    plt.plot([months[-1]] + future_months, [last_val] + projection, 
+             linestyle='--', color='orange', label='Predicted Trend')
+
+    # Design
+    plt.title('Klimaticket ROI Trend & Projection', fontsize=14)
+    plt.ylabel('Total Value Generated (€)')
+    plt.grid(True, alpha=0.3)
+    plt.legend()
+
+    # Send BytesIO-val
+    buf = io.BytesIO()
+    plt.savefig(buf, format='png')
+    buf.seek(0)
+    bot.send_photo(message.chat.id, buf, caption="📈 The dotted line shows where you'll cross the red magic line!")
 
 
 @bot.message_handler(func=lambda message: True)

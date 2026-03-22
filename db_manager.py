@@ -107,3 +107,21 @@ def get_data_for_chart():
     rows = cursor.fetchall()
     conn.close()
     return rows # Formátum: [('2025-11', 140.5), ('2025-12', 90.2)...]
+
+def get_cumulative_data():
+    conn = sqlite3.connect(DB_NAME)
+    cursor = conn.cursor()
+    # Ez a "Window Function" varázslat: minden hónaphoz hozzáadja az összes előzőt
+    query = """
+        SELECT month, SUM(monthly_sum) OVER (ORDER BY month)
+        FROM (
+            SELECT strftime('%Y-%m', date) as month, SUM(price_saved) as monthly_sum
+            FROM trips
+            WHERE date >= '2025-10-06'
+            GROUP BY month
+        )
+    """
+    cursor.execute(query)
+    rows = cursor.fetchall()
+    conn.close()
+    return rows # [('2025-10', 80), ('2025-11', 220), ...]
