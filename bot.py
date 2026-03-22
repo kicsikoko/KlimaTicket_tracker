@@ -53,8 +53,7 @@ def show_stats(message):
     response = (
         f"📊 Klimaticket Statistics:\n\n"
         f"🚊 Number of trips: {trip_count}\n"
-        f"💰 Total Savings: {total_saved:.2f} €\n"
-        f"💰 Eddigi megtakarítás: *{total_saved:.2f} €*\n\n"
+        f"💰 Total Savings: *{total_saved:.2f} €*\n\n"
         f"{progress_msg}"
         
     )
