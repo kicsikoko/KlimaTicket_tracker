@@ -279,7 +279,7 @@ def send_trend_chart(message):
     buf.seek(0)
     bot.send_photo(message.chat.id, buf, caption="📈 The dotted line shows where you'll cross the red magic line!")
 
-@bot.message_handler(commands=['distribution'])
+@bot.message_handler(commands=['piechart'])
 def show_distribution_chart(message):
     # 1. Retrieve data the current cycle
     current_start = get_current_pass_start()
