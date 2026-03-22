@@ -347,8 +347,12 @@ def handle_message(message):
         show_distribution_chart(message)
 
 if __name__ == "__main__":
-    print("Bot has started...")
+    print("🚀 Bot has started and is listening...")
     try:
         bot.infinity_polling(timeout=10, long_polling_timeout=5)
+    except KeyboardInterrupt:
+        print("\n🛑 Bot stopping (Ctrl+C detected)...")
+        # Itt lezárhatnál adatbázis kapcsolatokat is, ha kellene
+        print("👋 Goodbye!")
     except Exception as e:
-        print(f"Error Occured: {e}")
+        print(f"❌ Unexpected Error: {e}")
