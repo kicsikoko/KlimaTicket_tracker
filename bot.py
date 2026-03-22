@@ -10,7 +10,7 @@ import io
 #Load env variables and read the token
 load_dotenv()
 TOKEN = os.getenv('TG_TOKEN')
-print(f"DEBUG: Betöltött token vége: ...{TOKEN[-4:] if TOKEN else 'NINCS TOKEN'}")
+print(f"DEBUG: Loaded token ending: ...{TOKEN[-4:] if TOKEN else 'NO TOKEN'}")
 #Check if it's succesful(if not, stop it)
 if not TOKEN:
     raise ValueError("Oops! No TG_TOKEN in the .env file!")
@@ -104,7 +104,7 @@ def show_stats(message):
         trips_left = int(remaining_annual / singleticket_price) + 1
         annual_status = f"📉 **{remaining_annual:.2f} €** is needed and ({trips_left} is left)."
     else:
-        annual_status = f"🥳 **A bérlet visszahozta az árát!** (+{abs(remaining_annual):.2f} €)"
+        annual_status = f"🥳 **The pass already paid off!** (+{abs(remaining_annual):.2f} €)"
 
     response = (
         f"📊 Klimaticket Statistics:\n\n"
@@ -113,7 +113,7 @@ def show_stats(message):
         f"🚊 Number of trips: {m_count} | Saved already: {m_saved:.2f}€\n"
         f"[{bar}] {percent}%\n"
         f"_{'✅ Monthly goal achieved!' if m_saved >= klimaticket_monthly_price else 'Has not yet been paid off.'}_\n\n"
-        f"💰 Total Annual Savings:"
+        f"💰 Total Annual Savings:\n"
         f"Total trips: {total_count}\n"
         f" Savings so far: *{total_saved:.2f} €*\n"
     )
@@ -125,10 +125,10 @@ def show_history(message):
     trips = db_manager.get_recent_trips(5)
 
     if not trips:
-        bot.reply_to(message, "📭 Még nincsenek rögzített utazásaid.")
+        bot.reply_to(message, "📭 There is no recorded data yet.")
         return
     
-    history_text = "📜 *Legutóbbi 5 utazásod:*\n\n"
+    history_text = "📜 *Last 5 trips:*\n\n"
 
     for trip in trips:
         #trip[0] = dátum, trip[1] = honnan, trip[2] = hova, trip[3] = ár
@@ -142,7 +142,7 @@ def send_chart(message):
     data = db_manager.get_data_for_chart()
     
     if not data:
-        bot.reply_to(message, "📭 Nincs elég adat a grafikonhoz.")
+        bot.reply_to(message, "📭 Not enough data to create chart.")
         return
 
     months = [row[0] for row in data]
@@ -174,7 +174,7 @@ def send_chart(message):
     buf.seek(0)
     plt.close() # Fontos, hogy ne fogyassza a RAM-ot!
 
-    bot.send_photo(message.chat.id, buf, caption="📊 Itt a havi lebontásod. A piros vonal felett már tiszta haszon vagy!")
+    bot.send_photo(message.chat.id, buf, caption="📊 Here is your monthly breakdown. Above the red line is pure profit!")
 
 @bot.message_handler(func=lambda message: True)
 def handle_message(message):
