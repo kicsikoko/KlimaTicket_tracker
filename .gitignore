@@ -1,2 +1,4 @@
 .env
-venv
+venv/
+*csv
+__pycache__/
