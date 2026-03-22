@@ -6,6 +6,7 @@ from dotenv import load_dotenv
 import db_manager
 import matplotlib.pyplot as plt
 import io
+from datetime import datetime
 
 #Load env variables and read the token
 load_dotenv()
@@ -20,8 +21,6 @@ bot = telebot.TeleBot(TOKEN)
 klimaticket_full_price = 1300
 klimaticket_monthly_price = 108.33
 singleticket_price = 20.90
-
-KLIMATICKET_START_DATE = "2025-10-06"
 
 db_manager.init_db() #Creating the DB at start
 
@@ -84,13 +83,26 @@ def export_to_csv(message):
 
     os.remove(file_name) #Cleaning
 
+def get_current_pass_start():
+    today = datetime.now()
+    #Pass last day is Oktober 6
+    #If it's already passed 6th of Oct then this year 6th of October is the start
+    #if not still last year's 6th of Oct
+    if today.month > 10 or (today.month == 10 and today.day >= 6):
+        start_year = today.year
+    else:
+        start_year = today.year -1
+
+    return f"{start_year}-10-06"
+
 @bot.message_handler(commands=['stats'])
 def show_stats(message):
 
-    total_res = db_manager.get_stats(KLIMATICKET_START_DATE)
+    current_cycle_start = get_current_pass_start()
+    total_res = db_manager.get_stats(current_cycle_start)
 
     #Total data
-    total_res = db_manager.get_stats()
+    #total_res = db_manager.get_stats()
     total_saved = total_res[0] if total_res and total_res[0] else 0
     total_count = total_res[1] if total_res and total_res[1] else 0
 
@@ -120,6 +132,7 @@ def show_stats(message):
         f"💰 Total Annual Savings:\n"
         f"Total trips: {total_count}\n"
         f" Savings so far: *{total_saved:.2f} €*\n"
+        f"\n\n 🔄 Current pass cycle: {current_cycle_start}"
     )
 
     bot.reply_to(message, response, parse_mode='Markdown')
