@@ -51,3 +51,11 @@ def get_stats():
     result = cursor.fetchone() #retrieve the result
     conn.close()
     return result
+
+def delete_last_trip():
+    conn = sqlite3.connect(DB_NAME)
+    cursor = conn.cursor()
+    #Search the highest number (ID) and delete
+    cursor.execute("DELETE FROM trips WHERE id = (SELECT MAX(id) FROM trips)")
+    conn.commit()
+    conn.close()

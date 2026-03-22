@@ -22,7 +22,8 @@ def send_welcome(message):
     markup = types.ReplyKeyboardMarkup(row_width=2)
     itembtn1 = types.KeyboardButton('Wien -> Linz')
     itembtn2 = types.KeyboardButton('Linz -> Wien')
-    markup.add(itembtn1, itembtn2)
+    itembtn3 = types.KeyboardButton('🔙 Undo last trip')
+    markup.add(itembtn1, itembtn2, itembtn3)
 
     bot.reply_to(message, "Which route should be registered?", reply_markup=markup)
 
@@ -53,6 +54,9 @@ def handle_message(message):
         price = db_manager.get_price('Linz->Wien')
         db_manager.log_trip('Linz', 'Wien', price)
         bot.reply_to(message, f"✅ Added: Wien -> Linz (Spared: {price}€)")
+    elif message.text == '🔙 Undone':
+        db_manager.delete_last_trip()
+        bot.reply_to(message, "🗑️ Last one deleted!")
 
 #bot.polling()
 if __name__ == "__main__":
