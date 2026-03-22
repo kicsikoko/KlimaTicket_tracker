@@ -106,12 +106,12 @@ def get_data_for_chart():
     cursor.execute(query)
     rows = cursor.fetchall()
     conn.close()
-    return rows # Formátum: [('2025-11', 140.5), ('2025-12', 90.2)...]
+    return rows # Format: [('2025-11', 140.5), ('2025-12', 90.2)...]
 
 def get_cumulative_data():
     conn = sqlite3.connect(DB_NAME)
     cursor = conn.cursor()
-    # Ez a "Window Function" varázslat: minden hónaphoz hozzáadja az összes előzőt
+    # This is the magic of the "Window Function": it adds all previous months to each month
     query = """
         SELECT month, SUM(monthly_sum) OVER (ORDER BY month)
         FROM (
@@ -125,3 +125,34 @@ def get_cumulative_data():
     rows = cursor.fetchall()
     conn.close()
     return rows # [('2025-10', 80), ('2025-11', 220), ...]
+
+def get_savings_by_route_category(start_date):
+    """
+    Categorize the trips and calculate the total savings by category.
+    Categories: Vienna-Linz, Hegyeshalom, Other
+    """
+    conn = sqlite3.connect(DB_NAME)
+    cursor = conn.cursor()
+    
+    # This is a "CASE" SQL query that labels the data on the fly
+    query = """
+        SELECT 
+            CASE 
+                -- If both cities are Vienna or Linz, then commuting
+                WHEN (origin IN ('Wien', 'Linz') AND destination IN ('Wien', 'Linz')) THEN 'Wien-Linz'
+                -- if anything Hegyeshalom
+                WHEN (origin LIKE '%Hegyes%' OR destination LIKE '%Hegyes%') THEN 'Hegyeshalom'
+                -- everything else
+                ELSE 'Other (Custom)'
+            END as route_category,
+            SUM(price_saved) as total_saved
+        FROM trips
+        WHERE date >= ?
+        GROUP BY route_category
+    """
+    cursor.execute(query, (start_date,))
+    rows = cursor.fetchall()
+    conn.close()
+    
+    # We'll convert this into a dictionary (dict) for easier processing: {'Wien-Linz': 500, 'Other': 100}
+    return {row[0]: row[1] for row in rows}

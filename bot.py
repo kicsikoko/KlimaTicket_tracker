@@ -169,14 +169,14 @@ def send_chart(message):
     months = [row[0] for row in data]
     savings = [row[1] for row in data]
 
-    # --- Matplotlib varázslat ---
+    # --- Matplotlib ---
     plt.figure(figsize=(10, 6))
     bars = plt.bar(months, savings, color='skyblue', edgecolor='navy')
     
-    # Havi bérlet ára (vízszintes vonal)
+    # Monthly pass price
     plt.axhline(y=108.33, color='red', linestyle='--', label='Monthly Cost (108.33 €)')
     
-    # Design finomhangolás
+    # Design finesse
     plt.title('Monthly Klimaticket Savings', fontsize=16)
     plt.xlabel('Month', fontsize=12)
     plt.ylabel('Euro (€)', fontsize=12)
@@ -184,16 +184,16 @@ def send_chart(message):
     plt.legend()
     plt.grid(axis='y', linestyle=':', alpha=0.7)
 
-    # Értékek kiírása az oszlopok tetejére
+    # Column naming
     for bar in bars:
         yval = bar.get_height()
         plt.text(bar.get_x() + bar.get_width()/2, yval + 2, f'{yval:.0f}€', ha='center', va='bottom')
 
-    # Kép mentése memóriába (fájl helyett)
+    # Saving pic to memory instead file
     buf = io.BytesIO()
     plt.savefig(buf, format='png', bbox_inches='tight')
     buf.seek(0)
-    plt.close() # Fontos, hogy ne fogyassza a RAM-ot!
+    plt.close()
 
     bot.send_photo(message.chat.id, buf, caption="📊 Here is your monthly breakdown. Above the red line is pure profit!")
 
@@ -279,6 +279,43 @@ def send_trend_chart(message):
     buf.seek(0)
     bot.send_photo(message.chat.id, buf, caption="📈 The dotted line shows where you'll cross the red magic line!")
 
+@bot.message_handler(commands=['distribution'])
+def show_distribution_chart(message):
+    # 1. Retrieve data the current cycle
+    current_start = get_current_pass_start()
+    
+    # 2. retrieve data and sort them
+    data_dict = db_manager.get_savings_by_route_category(current_start)
+    
+    if not data_dict or sum(data_dict.values()) == 0:
+        bot.reply_to(message, "📭 Not enough data for pie chart.")
+        return
+
+    # 3. Prepare data for matplotlib
+    labels = list(data_dict.keys())
+    sizes = list(data_dict.values())
+    total_savings = sum(sizes)
+    
+    # Set Colors
+    colors = ['#4f6c8c', '#e03e3e', '#a9a9a9']
+
+    # --- PieChart drawing ---
+    plt.figure(figsize=(8, 8))
+    # 'autopct' writes the percentage on
+    plt.pie(sizes, labels=labels, autopct='%1.1f%%', startangle=140, colors=colors, 
+            textprops={'fontsize': 12}, wedgeprops={'edgecolor': 'white'})
+    
+    plt.axis('equal') 
+    plt.title(f'Klimaticket Savings Distribution\n(Since {current_start})\nTotal: {total_savings:.2f}€', fontsize=14)
+
+    # 4. Save pic to memory
+    buf = io.BytesIO()
+    plt.savefig(buf, format='png', bbox_inches='tight')
+    buf.seek(0)
+    plt.close() # Free the RAM 
+
+    # 5. Send to TG
+    bot.send_photo(message.chat.id, buf, caption="🍕 Here’s the pie chart! You can see which route “brings in” the most money.")
 
 @bot.message_handler(func=lambda message: True)
 def handle_message(message):
