@@ -124,7 +124,7 @@ def show_stats(message):
         annual_status = f"🥳 **The pass already paid off!** (+{abs(remaining_annual):.2f} €)"
 
     response = (
-        f"📊 Klimaticket Statistics:\n\n"
+        f"📊 Klimaticket Statistics:\n"
         f"━━━━━━━━━━━━━━━━━━\n"
         f"📅 *This month:*\n"
         f"🚊 Number of trips: {m_count} | Saved already: {m_profit:.2f}€\n"
@@ -132,7 +132,7 @@ def show_stats(message):
         f"_{'✅ Monthly goal achieved!' if m_saved >= klimaticket_monthly_price else 'Has not yet been paid off.'}_\n\n"
         f"💰 Total Annual Savings:\n"
         f"Total trips: {total_count}\n"
-        f"[{annual_bar}] {annual_percent}%\n"
+        f"[{annual_bar}] {annual_percent}%\n\n"
         f" Savings so far: *{total_saved:.2f} €* / {klimaticket_full_price} €\n"
         f"\n\n 🔄 Current pass cycle: {current_cycle_start}"
     )
