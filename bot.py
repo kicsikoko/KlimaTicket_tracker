@@ -14,6 +14,9 @@ if not TOKEN:
 
 bot = telebot.TeleBot(TOKEN)
 
+klimaticket_price = 1300
+singleticket_price = 20.90
+
 db_manager.init_db() #Creating the DB at start
 
 @bot.message_handler(commands=['start'])
@@ -35,10 +38,24 @@ def show_stats(message):
     total_saved = result[0] if result[0] else 0
     trip_count = result[1] if result[1] else 0
 
+    remaining_amount = klimaticket_price - total_saved
+
+    if remaining_amount > 0:
+        trips_needed = int(remaining_amount / singleticket_price) + 1
+        progress_msg = f"📉 **{remaining_amount:.2f} €** more needed for payback.\n" \
+                       f"🚉 **{trips_needed}** trips."
+    else:
+        #if you spare more than the pass price
+        profit = abs(remaining_amount)
+        progress_msg = f"🥳 **Your pass has already paid off!**\n" \
+                       f"💰 Currently **{profit:.2f} €** is the pure profit."
+
     response = (
         f"📊 Klimaticket Statistics:\n\n"
         f"🚊 Number of trips: {trip_count}\n"
         f"💰 Total Savings: {total_saved:.2f} €\n"
+        f"💰 Eddigi megtakarítás: *{total_saved:.2f} €*\n\n"
+        f"{progress_msg}"
         
     )
 
