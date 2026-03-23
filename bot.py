@@ -1,5 +1,7 @@
 import os
 import csv
+import time
+import logging
 import telebot
 from telebot import types
 from dotenv import load_dotenv
@@ -346,13 +348,35 @@ def handle_message(message):
     elif message.text == '🍕 Pie Chart':
         show_distribution_chart(message)
 
+logging.basicConfig(
+    filename='bot_errors.log',
+    level=logging.ERROR,
+    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+)
+
+def run_bot():
+    while True: 
+        try:
+            print("🚀 Bot has started: {datetime.now().strftime('%H:%M:%S')}")
+            # logger_level=logging.ERROR: this silences the "Break infinity polling" message in console
+            bot.infinity_polling(
+                timeout=20, 
+                long_polling_timeout=10, 
+                logger_level=logging.ERROR
+            )
+        
+        except KeyboardInterrupt:
+            print("\n 🛑 Stopping Bot (Ctrl+C detected)...Salute👋")
+            break
+        
+        except Exception as e:
+            # Saves its real error, but console stays clean
+            logging.error(f"Polling hiba: {e}", exc_info=True)
+            
+            print(f"⚠️ Hálózati hiba (pl. nincs net a ThinkPaden). Újrapróbálkozás 5 mp múlva...")
+            time.sleep(5)
+
 if __name__ == "__main__":
-    print("🚀 Bot has started and is listening...")
-    try:
-        bot.infinity_polling(timeout=10, long_polling_timeout=5)
-    except KeyboardInterrupt:
-        print("\n🛑 Bot stopping (Ctrl+C detected)...")
-        # Itt lezárhatnál adatbázis kapcsolatokat is, ha kellene
-        print("👋 Goodbye!")
-    except Exception as e:
-        print(f"❌ Unexpected Error: {e}")
+    run_bot()
+    
+    
