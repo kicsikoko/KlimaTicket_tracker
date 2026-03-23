@@ -1,9 +1,12 @@
 import os
 import csv
+import sys
 import time
 import logging
 import telebot
 from telebot import types
+from telebot import logger
+from telebot import logger as telebot_logger
 from dotenv import load_dotenv
 import db_manager
 import matplotlib
@@ -21,6 +24,8 @@ if not TOKEN:
     raise ValueError("Oops! No TG_TOKEN in the .env file!")
 
 bot = telebot.TeleBot(TOKEN)
+
+telebot_logger.setLevel(logging.CRITICAL)
 
 klimaticket_full_price = 1300
 klimaticket_monthly_price = 108.33
@@ -348,35 +353,30 @@ def handle_message(message):
     elif message.text == '🍕 Pie Chart':
         show_distribution_chart(message)
 
-logging.basicConfig(
-    filename='bot_errors.log',
-    level=logging.ERROR,
-    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
-)
-
 def run_bot():
-    while True: 
+    print(f"🚀 Bot inicialization...")
+    
+    while True:
         try:
-            print("🚀 Bot has started: {datetime.now().strftime('%H:%M:%S')}")
-            # logger_level=logging.ERROR: this silences the "Break infinity polling" message in console
-            bot.infinity_polling(
-                timeout=20, 
-                long_polling_timeout=10, 
-                logger_level=logging.ERROR
-            )
-        
-        except KeyboardInterrupt:
-            print("\n 🛑 Stopping Bot (Ctrl+C detected)...Salute👋")
-            break
-        
-        except Exception as e:
-            # Saves its real error, but console stays clean
-            logging.error(f"Polling hiba: {e}", exc_info=True)
+            now = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+            print(f"✅ Bot is active: {now}")
             
-            print(f"⚠️ Hálózati hiba (pl. nincs net a ThinkPaden). Újrapróbálkozás 5 mp múlva...")
-            time.sleep(5)
+            # A timeout=60 segít, hogy ne kérdezze le másodpercenként a szervert
+            # A non_stop=True belsőleg kezeli a kisebb netkimaradásokat a Railjeten
+            bot.polling(non_stop=True, timeout=60, long_polling_timeout=20)
+
+        except KeyboardInterrupt:
+            # Ez kezeli a Ctrl+C-t
+            print(f"\n🛑 Manual shutdown.. 👋 Salute!")
+            bot.stop_polling()
+            break # Kilép a while ciklusból
+
+        except Exception as e:
+            # Itt elkapjuk a valódi hálózati hibákat (pl. WinError 10054)
+            print(f"⚠️ Hiba történt: {e}")
+            # FONTOS: várunk egy kicsit, hogy ne pörögjön a végtelenségig a hiba
+            print("🔄 Újraindítás 10 másodperc múlva...")
+            time.sleep(10)
 
 if __name__ == "__main__":
     run_bot()
-    
-    
