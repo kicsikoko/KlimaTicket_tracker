@@ -2,3 +2,8 @@
 venv/
 *csv
 __pycache__/
+.vscode/
+*.py[cod]
+*$py.class
+klimaticket.db
+.log

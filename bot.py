@@ -8,6 +8,7 @@ from telebot import types
 from telebot import logger
 from telebot import logger as telebot_logger
 from dotenv import load_dotenv
+import signal
 import db_manager
 import matplotlib
 matplotlib.use('Agg')
@@ -356,27 +357,26 @@ def handle_message(message):
 def run_bot():
     print(f"🚀 Bot inicialization...")
     
-    while True:
+    running = True
+    
+    while running:
         try:
             now = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
             print(f"✅ Bot is active: {now}")
+            bot.polling(non_stop=False, timeout=60)
             
-            # A timeout=60 segít, hogy ne kérdezze le másodpercenként a szervert
-            # A non_stop=True belsőleg kezeli a kisebb netkimaradásokat a Railjeten
-            bot.polling(non_stop=True, timeout=60, long_polling_timeout=20)
-
         except KeyboardInterrupt:
-            # Ez kezeli a Ctrl+C-t
-            print(f"\n🛑 Manual shutdown.. 👋 Salute!")
-            bot.stop_polling()
-            break # Kilép a while ciklusból
+            print("\n🛑 Shutting down... Salute!")
+            running = False
+            break
 
         except Exception as e:
-            # Itt elkapjuk a valódi hálózati hibákat (pl. WinError 10054)
-            print(f"⚠️ Hiba történt: {e}")
-            # FONTOS: várunk egy kicsit, hogy ne pörögjön a végtelenségig a hiba
-            print("🔄 Újraindítás 10 másodperc múlva...")
+            print(f"⚠️ Network error: {e}")
+            print("🔄 Restarting in 10secs...")
             time.sleep(10)
+    bot.stop_polling()
+    sys.exit(0)
 
 if __name__ == "__main__":
+    signal.signal(signal.SIGINT, signal.default_int_handler)
     run_bot()
